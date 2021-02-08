@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Link;
 use App\Models\Page;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -113,16 +114,77 @@ class AdminController extends Controller
 
     public function pageLinks (string $slug)
     {
-        return view('admin.page_links');
+        $user = Auth::user();
+
+        $page = Page::where('slug', $slug)->where('id_user', $user->public_id)
+            ->first();
+
+        if($page){
+            $links = Link::where('id_page', $page->public_id)->orderBy('order', 'ASC')
+                ->get();
+
+            return view('admin.page_links', [
+                'menu' => 'links',
+                'page' => $page,
+                'links' => $links,
+            ]);
+        } else {
+            return redirect()->route('admin.index');
+        }
     }
 
     public function pageDesign (string $slug)
     {
-        return view('admin.page_design');
+        return view('admin.page_design', [
+            'menu' => 'design'
+        ]);
     }
 
     public function pageStats (string $slug)
     {
-        return view('admin.page_stats');
+        return view('admin.page_stats', [
+            'menu' => 'stats'
+        ]);
+    }
+
+    public function linkOrderUpdate(string $linkid, int $pos)
+    {
+        $user = Auth::user();
+
+        $link = Link::where('public_id', $linkid)->first();
+
+        $myPages = Page::where('id_user', $user->public_id)->pluck('public_id')
+            ->toArray();
+
+        if(in_array($link->id_page, $myPages)){
+            if($link->order > $pos) {
+                $afterLinks = Link::where('id_page', $link->id_page)
+                    ->where('order', '>=', $pos)->get();
+
+                foreach($afterLinks as $afterLink){
+                    $afterLink->order++;
+                    $afterLink->save();
+                };
+            } else if ($link->order < $pos) {
+                $beforeLinks = Link::where('id_page', $link->id_page)
+                    ->where('order', '<=', $pos)->get();
+
+                foreach($beforeLinks as $beforeLink){
+                    $beforeLink->order--;
+                    $beforeLink->save();
+                };
+            };
+
+            $link->order = $pos;
+            $link->save();
+
+            $allLinks = Link::where('id_page', $link->id_page)
+                ->orderBy('order', 'ASC')->get();
+
+            foreach($allLinks as $key => $item){
+                $item->order = $key;
+                $item->save();
+            };
+        };
     }
 }

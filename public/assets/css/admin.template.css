@@ -42,6 +42,31 @@ header {
     padding: 0 10px;
 }
 
+header ul {
+    margin: 0;
+    list-style: none;
+    padding: 0;
+    display: flex;
+}
+
+header li {
+    border-bottom: 2px solid #fff;
+}
+
+header li:hover {
+    border-bottom: 2px solid #ccc;
+}
+
+header li.active {
+    border-bottom: 2px solid #000;
+}
+
+header li a {
+    display: block;
+    padding: 15px;
+    text-decoration: none;
+}
+
 table {
     margin: 10px;
 }
@@ -57,4 +82,80 @@ table td {
     text-align: left;
     padding: 10px;
     border-bottom: 1px solid #ccc;
+}
+
+.preheader{
+    background-color: #ccc;
+    padding: 10px 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+.area {
+    display: flex;
+    flex: 1;
+}
+
+.area .leftside {
+    flex: 1;
+    border-right: 1px solid #ccc;
+}
+
+.area .rightside {
+    margin: 0 auto
+}
+
+.area .rightside iframe {
+    width: 300px;
+    min-height: calc(100vh - 20px - 40px - 20px - 18px);
+    height: 550px;
+    border: 10px solid #000;
+    border-radius: 20px;
+    margin: 20px;
+}
+
+.bigbutton {
+    display: block;
+    margin: 20px;
+    padding: 15px;
+    background-color: #ccc;
+    border-radius: 10px;
+    text-align: center;
+    transition: all 0.2s ease-in-out 0s;
+}
+
+.bigbutton:hover {
+    background-color: #aaa;
+}
+
+#links {
+    padding: 0;
+    list-style: none;
+    margin: 20px;
+}
+
+.link--item {
+    display: flex;
+    background-color: #fff;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    padding: 10px;
+    align-items: center;
+    box-shadow: 0px 2px 2px #ccc;
+}
+
+.link--item-order {
+    cursor: move;
+    margin-right: 10px;
+}
+
+.link--item-info {
+    flex: 1;
+}
+
+.link--item-title {
+    font-weight: bold;
+}
+
+.link--item-buttons a:hover{
+    text-decoration: underline;
 }

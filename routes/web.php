@@ -20,6 +20,8 @@ Route::prefix('admin')->group(function (){
     Route::get('{slug}/design', [AdminController::class, 'pageDesign'])->name('admin.design');
     Route::get('{slug}/stats', [AdminController::class, 'pageStats'])->name('admin.stats');
 
+    Route::get('linkorder/{linkid}/{pos}', [AdminController::class, 'linkOrderUpdate']);
+
     Route::get('/', [AdminController::class, 'index'])->name('admin.index');
 });
 

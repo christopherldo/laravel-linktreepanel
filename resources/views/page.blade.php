@@ -85,8 +85,12 @@
             border-radius: 10px;
         }
 
+        .banner {
+            text-align: center;
+        }
+
         .banner a {
-            color: {{ $font_color }}
+            color: {{ $font_color }};
         }
 
     </style>
