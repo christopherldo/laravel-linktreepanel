@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+
+use function PHPSTORM_META\map;
 
 class AdminController extends Controller
 {
@@ -133,20 +136,6 @@ class AdminController extends Controller
         }
     }
 
-    public function pageDesign (string $slug)
-    {
-        return view('admin.page_design', [
-            'menu' => 'design'
-        ]);
-    }
-
-    public function pageStats (string $slug)
-    {
-        return view('admin.page_stats', [
-            'menu' => 'stats'
-        ]);
-    }
-
     public function linkOrderUpdate(string $linkid, int $pos)
     {
         $user = Auth::user();
@@ -186,5 +175,213 @@ class AdminController extends Controller
                 $item->save();
             };
         };
+    }
+
+    public function newLink (string $slug)
+    {
+        $user = Auth::user();
+
+        $page = Page::where('id_user', $user->public_id)->where('slug', $slug)
+            ->first();
+
+        if($page){
+            return view('admin.page_editlink', [
+                'menu' => 'links',
+                'page' => $page
+            ]);
+        } else {
+            return redirect()->route('admin.index');
+        };
+    }
+
+    public function newLinkAction (Request $request, string $slug)
+    {
+        $user = Auth::user();
+
+        $page = Page::where('id_user', $user->public_id)->where('slug', $slug)
+            ->first();
+
+        if($page){
+            $data = $request->only([
+                'status',
+                'title',
+                'href',
+                'op_bg_color',
+                'op_text_color',
+                'op_border_type',
+            ]);
+
+            $validator = Validator::make($data, [
+                'status' => ['required', 'boolean'],
+                'title' => ['required', 'min:2', 'max:100'],
+                'href' => ['required', 'url'],
+                'op_bg_color' => ['required', 'regex:/^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/i'],
+                'op_text_color' => ['required', 'regex:/^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/i'],
+                'op_border_type' => ['required', Rule::in(['square', 'rounded'])],
+            ]);
+
+            if($validator->fails()){
+                $request->session()->flash('errors', $validator->errors()->all());
+
+                return redirect()->route('admin.newlink', $slug)->withInput($data);
+            } else {
+                $status = $data['status'];
+                $title = $data['title'];
+                $href = $data['href'];
+                $op_bg_color = $data['op_bg_color'];
+                $op_text_color = $data['op_text_color'];
+                $op_border_type = $data['op_border_type'];
+
+                $totalLinks = Link::where('id_page', $page->public_id)->count();
+
+                do {
+                    $linkPublicId = Str::uuid()->toString();
+                } while(Link::where('public_id', $linkPublicId)->count() > 0);
+
+                $newLink = new Link();
+                $newLink->public_id = $linkPublicId;
+                $newLink->id_page = $page->public_id;
+                $newLink->status = $status;
+                $newLink->order = $totalLinks;
+                $newLink->title = $title;
+                $newLink->href = $href;
+                $newLink->op_bg_color = $op_bg_color;
+                $newLink->op_text_color = $op_text_color;
+                $newLink->op_border_type = $op_border_type;
+                $newLink->save();
+
+                return redirect()->route('admin.links', $slug);
+            }
+        } else {
+            return redirect()->route('admin.index');
+        }
+    }
+
+    public function editLink(string $slug, string $linkId)
+    {
+        $user = Auth::user();
+
+        $page = Page::where('id_user', $user->public_id)->where('slug', $slug)
+            ->first();
+
+        if($page){
+            $link = Link::where('public_id', $linkId)
+                ->where('id_page', $page->public_id)->first();
+
+            if($link) {
+                return view('admin.page_editlink', [
+                    'menu' => 'links',
+                    'page' => $page,
+                    'link' => $link,
+                ]);
+            }
+        };
+
+        return redirect()->route('admin.index');
+    }
+
+    public function editLinkAction(Request $request, string $slug, string $linkId){
+        $user = Auth::user();
+
+        $page = Page::where('id_user', $user->public_id)->where('slug', $slug)
+            ->first();
+
+        if($page){
+            $link = Link::where('public_id', $linkId)
+                ->where('id_page', $page->public_id)->first();
+
+            if($link) {
+                $data = $request->only([
+                    'status',
+                    'title',
+                    'href',
+                    'op_bg_color',
+                    'op_text_color',
+                    'op_border_type',
+                ]);
+
+                $validator = Validator::make($data, [
+                    'status' => ['required', 'boolean'],
+                    'title' => ['required', 'min:2', 'max:100'],
+                    'href' => ['required', 'url'],
+                    'op_bg_color' => ['required', 'regex:/^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/i'],
+                    'op_text_color' => ['required', 'regex:/^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/i'],
+                    'op_border_type' => ['required', Rule::in(['square', 'rounded'])],
+                ]);
+
+                if($validator->fails()){
+                    $request->session()->flash('errors', $validator->errors()->all());
+
+                    return redirect()->route('admin.editlink', [
+                        'menu' => 'links',
+                        'page' => $page,
+                        'link' => $link,
+                    ])->withInput($data);
+                } else {
+                    $status = $data['status'];
+                    $title = $data['title'];
+                    $href = $data['href'];
+                    $op_bg_color = $data['op_bg_color'];
+                    $op_text_color = $data['op_text_color'];
+                    $op_border_type = $data['op_border_type'];
+
+                    $link->id_page = $page->public_id;
+                    $link->status = $status;
+                    $link->title = $title;
+                    $link->href = $href;
+                    $link->op_bg_color = $op_bg_color;
+                    $link->op_text_color = $op_text_color;
+                    $link->op_border_type = $op_border_type;
+                    $link->save();
+
+                    return redirect()->route('admin.links', $slug);
+                }
+            };
+        };
+
+        return redirect()->route('admin.index');
+    }
+
+    public function dellink (string $slug, string $linkId)
+    {
+        $user = Auth::user();
+
+        $page = Page::where('id_user', $user->public_id)->where('slug', $slug)
+            ->first();
+
+        if($page){
+            $link = Link::where('public_id', $linkId)
+                ->where('id_page', $page->public_id)->first();
+
+            if($link) {
+                $link->delete();
+
+                $allLinks = Link::where('id_page', $page->public_id)
+                    ->orderBy('order', 'ASC')->get();
+
+                foreach($allLinks as $key => $item){
+                    $item->order = $key;
+                    $item->save();
+                };
+
+                return redirect()->route('admin.links', $slug);
+            };
+        };
+
+        return redirect()->route('admin.index');
+    }
+
+    public function pageDesign (string $slug)
+    {
+        return view('admin.page_design', [
+            'menu' => 'design'
+        ]);
+    }
+
+    public function pageStats (string $slug)
+    {
+        return view('admin.page_stats', [
+            'menu' => 'stats'
+        ]);
     }
 }
