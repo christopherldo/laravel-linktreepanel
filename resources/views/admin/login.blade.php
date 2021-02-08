@@ -11,8 +11,16 @@
     <div class="loginArea">
         <h1>Login</h1>
 
-        @if ($error)
-            <div class="error">{{$error}}</div>
+        @if ($errors)
+            <div class="error">
+                <ul>
+                    @foreach ($errors as $error)
+                        <li>
+                            {{ $error }}
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
         @endif
 
         <form method="POST">
@@ -21,7 +29,7 @@
             <input {{old('email') ? 'autofocus' : ''}} required type="password" name="password" id="password" placeholder="Senha">
             <input type="submit" value="Entrar">
 
-            Ainda não tem cadastro? <a href="{{url('admin/register')}}">Cadastre-se</a>
+            Ainda não tem cadastro? <a href="{{route('register')}}">Cadastre-se</a>
         </form>
     </div>
 </body>

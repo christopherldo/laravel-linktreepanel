@@ -59,3 +59,8 @@ a:hover {
     border-radius: 5px;
     margin-bottom: 10px;
 }
+
+.error ul{
+    margin: 0;
+    padding: 0 10px;
+}
