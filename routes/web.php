@@ -19,7 +19,10 @@ Route::prefix('admin')->group(function (){
     Route::get('logout', [AdminController::class, 'logout'])->name('logout');
 
     Route::get('{slug}/links', [AdminController::class, 'pageLinks'])->name('admin.links');
+
     Route::get('{slug}/design', [AdminController::class, 'pageDesign'])->name('admin.design');
+    Route::post('{slug}/design', [AdminController::class, 'pageDesignAction']);
+
     Route::get('{slug}/stats', [AdminController::class, 'pageStats'])->name('admin.stats');
     Route::get('{slug}/delete', [AdminController::class, 'pageDelete'])->name('admin.delete');
 

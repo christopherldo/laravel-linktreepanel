@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Click;
 use App\Models\Link;
 use App\Models\Page;
 use App\Models\User;
+use App\Models\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -154,7 +156,8 @@ class AdminController extends Controller
                     'unique:pages',
                     'min:2',
                     'max:16',
-                    Rule::notIn(['admin'])],
+                    Rule::notIn(['admin'])
+                ],
                 'op_font_color' => ['required', 'regex:/^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/i'],
                 'op_bg_value_1' => ['required', 'regex:/^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/i'],
                 'op_bg_value_2' => ['required', 'regex:/^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/i'],
@@ -163,7 +166,7 @@ class AdminController extends Controller
                 'op_description' => ['max:255'],
             ]);
 
-            if($validator->fails()){
+            if ($validator->fails()) {
                 $request->session()->flash('errors', $validator->errors()->all());
 
                 return redirect()->route('admin.newpage')->withInput($data);
@@ -182,7 +185,7 @@ class AdminController extends Controller
                     $pagePublicId = Str::uuid()->toString();
                 } while (Page::where('public_id', $pagePublicId)->count() > 0);
 
-                if($op_profile_image){
+                if ($op_profile_image) {
                     $imageName = $pagePublicId . '.webp';
                     $dest = public_path('/media/uploads/') . $imageName;
 
@@ -194,11 +197,11 @@ class AdminController extends Controller
                     $newPage->op_profile_image = $imageName;
                 };
 
-                if($op_title){
+                if ($op_title) {
                     $newPage->op_title = $op_title;
                 };
 
-                if($op_description){
+                if ($op_description) {
                     $newPage->op_description = $op_description;
                 };
 
@@ -479,13 +482,112 @@ class AdminController extends Controller
             ->first();
 
         if ($page) {
+            $page->op_bg_value = explode(',', $page->op_bg_value);
+
             return view('admin.page_design', [
                 'menu' => 'design',
                 'page' => $page
             ]);
         } else {
             return redirect()->route('admin.index');
-        }
+        };
+    }
+
+    public function pageDesignAction(Request $request, string $pageSlug)
+    {
+        $user = Auth::user();
+
+        $page = Page::where('slug', $pageSlug)->where('id_user', $user->public_id)
+            ->first();
+
+        if ($page) {
+            $data = $request->only([
+                'slug',
+                'op_font_color',
+                'op_bg_value_1',
+                'op_bg_value_2',
+                'op_profile_image',
+                'op_title',
+                'op_description',
+            ]);
+
+            $savedSlug = $data['slug'];
+
+            if ($data['slug'] === $page->slug) {
+                unset($data['slug']);
+            };
+
+            $validator = Validator::make($data, [
+                'slug' => [
+                    'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
+                    'string',
+                    'unique:pages',
+                    'min:2',
+                    'max:16',
+                    Rule::notIn(['admin'])
+                ],
+                'op_font_color' => ['regex:/^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/i'],
+                'op_bg_value_1' => ['regex:/^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/i', 'required_with:op_bg_value_2'],
+                'op_bg_value_2' => ['regex:/^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/i', 'required_with:op_bg_value_1'],
+                'op_profile_image' => ['image', 'mimes:png,jpg,jpeg,webp', 'max:10240'],
+                'op_title' => ['max:100'],
+                'op_description' => ['max:255'],
+            ]);
+
+            if ($validator->fails()) {
+                $request->session()->flash('errors', $validator->errors()->all());
+
+                return redirect()->route('admin.design', $pageSlug)->withInput($data);
+            } else {
+                $pageSlug = $savedSlug;
+
+                $slug = $data['slug'] ?? '';
+                $op_font_color = $data['op_font_color'] ?? '';
+                $op_bg_value_1 = $data['op_bg_value_1'] ?? '';
+                $op_bg_value_2 = $data['op_bg_value_2'] ?? '';
+                $op_profile_image = $data['op_profile_image'] ?? '';
+                $op_title = $data['op_title'] ?? '';
+                $op_description = $data['op_description'] ?? '';
+
+                if ($slug) {
+                    $page->slug = $slug;
+                };
+
+                if ($op_font_color) {
+                    $page->op_font_color = $op_font_color;
+                };
+
+                if ($op_bg_value_1 || $op_bg_value_2) {
+                    $page->op_bg_value = "$op_bg_value_1,$op_bg_value_2";
+                };
+
+                if ($op_profile_image) {
+                    $imageName = $page->public_id . '.webp';
+                    $dest = public_path('/media/uploads/') . $imageName;
+
+                    $manager = new ImageManager();
+
+                    $img = $manager->make($op_profile_image->getRealPath())->fit(300, 300);
+                    $img->save($dest);
+
+                    $page->op_profile_image = $imageName;
+                };
+
+                if ($op_title) {
+                    $page->op_title = $op_title;
+                };
+
+                if ($op_description) {
+                    $page->op_description = $op_description;
+                };
+
+                $page->save();
+
+                return redirect()->route('admin.design', $pageSlug);
+            };
+        };
+
+        return redirect()->route('admin.index');
     }
 
     public function pageStats(string $slug)
@@ -513,7 +615,25 @@ class AdminController extends Controller
             ->first();
 
         if ($page) {
-            if($page->op_profile_image !== 'default.webp'){
+            $links = Link::where('id_page', $page->public_id)->get();
+
+            foreach ($links as $link) {
+                $clicks = Click::where('id_link', $link->public_id)->get();
+
+                foreach ($clicks as $click) {
+                    $click->delete();
+                };
+
+                $link->delete();
+            };
+
+            $views = View::where('id_page', $page->public_id)->get();
+
+            foreach ($views as $view) {
+                $view->delete();
+            };
+
+            if ($page->op_profile_image !== 'default.webp') {
                 unlink(public_path('/media/uploads/' . $page->op_profile_image));
             };
 

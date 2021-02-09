@@ -26,8 +26,8 @@ class CreateAllTables extends Migration
             $table->uuid('id_user');
             $table->string('slug', 16);
             $table->string('op_font_color', 9)->default('#000000');
-            $table->string('op_bg_type', 16)->default('color');
-            $table->string('op_bg_value', 41)->default('#ffffff');
+            $table->string('op_bg_type', 16)->default('gradient');
+            $table->string('op_bg_value', 41)->default('#ffffff,#ffffff');
             $table->string('op_profile_image', 41)->default('default.webp');
             $table->string('op_title', 100)->nullable();
             $table->text('op_description')->nullable();

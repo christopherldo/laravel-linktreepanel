@@ -50,20 +50,20 @@
             flex-flow: column;
             align-items: center;
             width: 100%;
-            margin: 50px 0;
+            margin: 25px 0;
         }
 
         .linkArea a {
             width: 100%;
-            max-width: 1000px;
+            max-width: 920px;
             display: block;
-            padding: 20px;
+            padding: 15px;
             text-align: center;
             text-decoration: none;
             font-size: 18px;
             font-weight: bold;
             margin-top: 7.5px;
-            margin-bottom: 7.5  px;
+            margin-bottom: 7.5px;
             box-shadow:
                 0 2.8px 2.2px rgba(0, 0, 0, 0.03),
                 0 6.7px 5.3px rgba(0, 0, 0, 0.04),
@@ -121,40 +121,8 @@
     </div>
 
     <div class="banner">
-        Feito com ❤️ por <a href="https://github.com/christopherldo">christopherldo</a>
+        Feito com ❤️ por <a href="{{route('page', 'christopherldo')}}">christopherldo</a>
     </div>
-
-    @if (empty($fb_pixel) === false)
-        <!-- Facebook Pixel Code -->
-        <script>
-            ! function(f, b, e, v, n, t, s) {
-                if (f.fbq) return;
-                n = f.fbq = function() {
-                    n.callMethod ?
-                        n.callMethod.apply(n, arguments) : n.queue.push(arguments)
-                };
-                if (!f._fbq) f._fbq = n;
-                n.push = n;
-                n.loaded = !0;
-                n.version = '2.0';
-                n.queue = [];
-                t = b.createElement(e);
-                t.async = !0;
-                t.src = v;
-                s = b.getElementsByTagName(e)[0];
-                s.parentNode.insertBefore(t, s)
-            }(window, document, 'script',
-                'https://connect.facebook.net/en_US/fbevents.js');
-            fbq('init', '{{ $fb_pixel }}');
-            fbq('track', 'PageView');
-
-        </script>
-        <noscript>
-            <img height="1" width="1" style="display:none"
-                src="https://www.facebook.com/tr?id={{ $fb_pixel }}&ev=PageView&noscript=1" />
-        </noscript>
-        <!-- End Facebook Pixel Code -->
-    @endif
 </body>
 
 </html>
