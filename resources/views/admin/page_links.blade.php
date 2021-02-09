@@ -1,7 +1,7 @@
 @extends('admin.page')
 
 @section('body')
-    <a class="bigbutton" href="{{url('admin/'. $page->slug . '/newlink')}}">
+    <a class="bigbutton" href="{{route('admin.newlink', $page->slug)}}">
         Novo Link
     </a>
 

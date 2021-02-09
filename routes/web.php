@@ -21,6 +21,10 @@ Route::prefix('admin')->group(function (){
     Route::get('{slug}/links', [AdminController::class, 'pageLinks'])->name('admin.links');
     Route::get('{slug}/design', [AdminController::class, 'pageDesign'])->name('admin.design');
     Route::get('{slug}/stats', [AdminController::class, 'pageStats'])->name('admin.stats');
+    Route::get('{slug}/delete', [AdminController::class, 'pageDelete'])->name('admin.delete');
+
+    Route::get('newpage', [AdminController::class, 'newPage'])->name('admin.newpage');
+    Route::post('newpage', [AdminController::class, 'newPageAction']);
 
     Route::get('linkorder/{linkid}/{pos}', [AdminController::class, 'linkOrderUpdate']);
 
@@ -33,4 +37,4 @@ Route::prefix('admin')->group(function (){
     Route::get('{slug}/dellink/{linkid}', [AdminController::class, 'dellink'])->name('admin.dellink');
 });
 
-Route::get('{slug}', [PageController::class, 'index']);
+Route::get('{slug}', [PageController::class, 'index'])->name('page');

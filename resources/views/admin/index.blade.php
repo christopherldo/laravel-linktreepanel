@@ -8,11 +8,17 @@
         <h2>Suas páginas</h2>
     </header>
 
+    @if(count($pages) < 2)
+        <a class="bigbutton" href="{{route('admin.newpage')}}">
+            Nova Página
+        </a>
+    @endif
+
     <table>
         <thead>
             <tr>
                 <th>Título</th>
-                <th width="20">Ações</th>
+                <th width="300">Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -20,10 +26,11 @@
                 <tr>
                     <td>{{$page->op_title}} ({{$page->slug}})</td>
                     <td>
-                        <a href="{{url('/'.$page->slug)}}" target="_blank">Abrir</a>
-                        <a href="{{url('admin/'.$page->slug.'/links')}}">Links</a>
-                        <a href="{{url('admin/'.$page->slug.'/design')}}">Aparência</a>
-                        <a href="{{url('admin/'.$page->slug.'/stats')}}">Estatísticas</a>
+                        <a href="{{route('page', $page->slug)}}" target="_blank">Abrir</a>
+                        <a href="{{route('admin.links', $page->slug)}}">Links</a>
+                        <a href="{{route('admin.design', $page->slug)}}">Aparência</a>
+                        <a href="{{route('admin.stats', $page->slug)}}">Estatísticas</a>
+                        <a href="{{route('admin.delete', $page->slug)}}">Excluir</a>
                     </td>
                 </tr>
             @endforeach

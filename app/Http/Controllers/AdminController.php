@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Intervention\Image\ImageManager;
 
 use function PHPSTORM_META\map;
 
@@ -25,21 +26,21 @@ class AdminController extends Controller
         ]);
     }
 
-    public function login (Request $request)
+    public function login(Request $request)
     {
         return view('admin.login', [
             'errors' => $request->session()->get('errors'),
         ]);
     }
 
-    public function loginAction (Request $request)
+    public function loginAction(Request $request)
     {
         $data = $request->only([
             'email',
             'password'
         ]);
 
-        if(Auth::attempt($data)){
+        if (Auth::attempt($data)) {
             return redirect()->route('admin.index');
         } else {
             $request->session()->flash('errors', ['login' => 'E-mail e/ou senha não conferem']);
@@ -50,14 +51,14 @@ class AdminController extends Controller
         };
     }
 
-    public function register (Request $request)
+    public function register(Request $request)
     {
         return view('admin.register', [
             'errors' => $request->session()->get('errors'),
         ]);
     }
 
-    public function registerAction (Request $request)
+    public function registerAction(Request $request)
     {
         $data = $request->only([
             'email',
@@ -70,10 +71,10 @@ class AdminController extends Controller
             'password' => 'required|string|confirmed|min:8'
         ]);
 
-        if($validator->fails()){
+        if ($validator->fails()) {
             $request->session()->flash('errors', $validator->errors()->all());
 
-            return redirect()->route('admin.register')->withInput([
+            return redirect()->route('register')->withInput([
                 'email' => $data['email']
             ]);
         } else {
@@ -84,7 +85,7 @@ class AdminController extends Controller
 
             do {
                 $userPublicId = Str::uuid()->toString();
-            } while(User::where('public_id', $userPublicId)->count() > 0);
+            } while (User::where('public_id', $userPublicId)->count() > 0);
 
             $newUser->public_id = $userPublicId;
             $newUser->email = $email;
@@ -104,25 +105,123 @@ class AdminController extends Controller
         return redirect()->route('admin.index');
     }
 
-    public function index ()
+    public function index()
     {
         $user = Auth::user();
 
         $pages = Page::where('id_user', $user->public_id)->get();
 
-        echo view('admin.index', [
+        return view('admin.index', [
             'pages' => $pages
         ]);
     }
 
-    public function pageLinks (string $slug)
+    public function newPage()
+    {
+        $user = Auth::user();
+
+        $pagesCount = Page::where('id_user', $user->public_id)->count();
+
+        if ($pagesCount < 2) {
+            return view('admin.newpage');
+        } else {
+            return redirect()->route('admin.index');
+        }
+    }
+
+    public function newPageAction(Request $request)
+    {
+        $user = Auth::user();
+
+        $pagesCount = Page::where('id_user', $user->public_id)->count();
+
+        if ($pagesCount < 2) {
+            $data = $request->only([
+                'slug',
+                'op_font_color',
+                'op_bg_value_1',
+                'op_bg_value_2',
+                'op_profile_image',
+                'op_title',
+                'op_description',
+            ]);
+
+            $validator = Validator::make($data, [
+                'slug' => [
+                    'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
+                    'required',
+                    'string',
+                    'unique:pages',
+                    'min:2',
+                    'max:16',
+                    Rule::notIn(['admin'])],
+                'op_font_color' => ['required', 'regex:/^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/i'],
+                'op_bg_value_1' => ['required', 'regex:/^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/i'],
+                'op_bg_value_2' => ['required', 'regex:/^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/i'],
+                'op_profile_image' => ['image', 'mimes:png,jpg,jpeg,webp', 'max:10240'],
+                'op_title' => ['max:100'],
+                'op_description' => ['max:255'],
+            ]);
+
+            if($validator->fails()){
+                $request->session()->flash('errors', $validator->errors()->all());
+
+                return redirect()->route('admin.newpage')->withInput($data);
+            } else {
+                $op_profile_image = $data['op_profile_image'] ?? '';
+                $op_title = $data['op_title'] ?? '';
+                $op_description = $data['op_description'] ?? '';
+                $slug = $data['slug'];
+                $op_font_color = $data['op_font_color'];
+                $op_bg_value_1 = $data['op_bg_value_1'];
+                $op_bg_value_2 = $data['op_bg_value_2'];
+
+                $newPage = new Page();
+
+                do {
+                    $pagePublicId = Str::uuid()->toString();
+                } while (Page::where('public_id', $pagePublicId)->count() > 0);
+
+                if($op_profile_image){
+                    $imageName = $pagePublicId . '.webp';
+                    $dest = public_path('/media/uploads/') . $imageName;
+
+                    $manager = new ImageManager();
+
+                    $img = $manager->make($op_profile_image->getRealPath())->fit(300, 300);
+                    $img->save($dest);
+
+                    $newPage->op_profile_image = $imageName;
+                };
+
+                if($op_title){
+                    $newPage->op_title = $op_title;
+                };
+
+                if($op_description){
+                    $newPage->op_description = $op_description;
+                };
+
+                $newPage->public_id = $pagePublicId;
+                $newPage->id_user = $user->public_id;
+                $newPage->slug = $slug;
+                $newPage->op_font_color = $op_font_color;
+                $newPage->op_bg_value = "$op_bg_value_1,$op_bg_value_2";
+                $newPage->save();
+            };
+        };
+
+        return redirect()->route('admin.index');
+    }
+
+    public function pageLinks(string $slug)
     {
         $user = Auth::user();
 
         $page = Page::where('slug', $slug)->where('id_user', $user->public_id)
             ->first();
 
-        if($page){
+        if ($page) {
             $links = Link::where('id_page', $page->public_id)->orderBy('order', 'ASC')
                 ->get();
 
@@ -145,12 +244,12 @@ class AdminController extends Controller
         $myPages = Page::where('id_user', $user->public_id)->pluck('public_id')
             ->toArray();
 
-        if(in_array($link->id_page, $myPages)){
-            if($link->order > $pos) {
+        if (in_array($link->id_page, $myPages)) {
+            if ($link->order > $pos) {
                 $afterLinks = Link::where('id_page', $link->id_page)
                     ->where('order', '>=', $pos)->get();
 
-                foreach($afterLinks as $afterLink){
+                foreach ($afterLinks as $afterLink) {
                     $afterLink->order++;
                     $afterLink->save();
                 };
@@ -158,7 +257,7 @@ class AdminController extends Controller
                 $beforeLinks = Link::where('id_page', $link->id_page)
                     ->where('order', '<=', $pos)->get();
 
-                foreach($beforeLinks as $beforeLink){
+                foreach ($beforeLinks as $beforeLink) {
                     $beforeLink->order--;
                     $beforeLink->save();
                 };
@@ -170,21 +269,21 @@ class AdminController extends Controller
             $allLinks = Link::where('id_page', $link->id_page)
                 ->orderBy('order', 'ASC')->get();
 
-            foreach($allLinks as $key => $item){
+            foreach ($allLinks as $key => $item) {
                 $item->order = $key;
                 $item->save();
             };
         };
     }
 
-    public function newLink (string $slug)
+    public function newLink(string $slug)
     {
         $user = Auth::user();
 
         $page = Page::where('id_user', $user->public_id)->where('slug', $slug)
             ->first();
 
-        if($page){
+        if ($page) {
             return view('admin.page_editlink', [
                 'menu' => 'links',
                 'page' => $page
@@ -194,14 +293,14 @@ class AdminController extends Controller
         };
     }
 
-    public function newLinkAction (Request $request, string $slug)
+    public function newLinkAction(Request $request, string $slug)
     {
         $user = Auth::user();
 
         $page = Page::where('id_user', $user->public_id)->where('slug', $slug)
             ->first();
 
-        if($page){
+        if ($page) {
             $data = $request->only([
                 'status',
                 'title',
@@ -220,7 +319,7 @@ class AdminController extends Controller
                 'op_border_type' => ['required', Rule::in(['square', 'rounded'])],
             ]);
 
-            if($validator->fails()){
+            if ($validator->fails()) {
                 $request->session()->flash('errors', $validator->errors()->all());
 
                 return redirect()->route('admin.newlink', $slug)->withInput($data);
@@ -236,7 +335,7 @@ class AdminController extends Controller
 
                 do {
                     $linkPublicId = Str::uuid()->toString();
-                } while(Link::where('public_id', $linkPublicId)->count() > 0);
+                } while (Link::where('public_id', $linkPublicId)->count() > 0);
 
                 $newLink = new Link();
                 $newLink->public_id = $linkPublicId;
@@ -264,11 +363,11 @@ class AdminController extends Controller
         $page = Page::where('id_user', $user->public_id)->where('slug', $slug)
             ->first();
 
-        if($page){
+        if ($page) {
             $link = Link::where('public_id', $linkId)
                 ->where('id_page', $page->public_id)->first();
 
-            if($link) {
+            if ($link) {
                 return view('admin.page_editlink', [
                     'menu' => 'links',
                     'page' => $page,
@@ -280,17 +379,18 @@ class AdminController extends Controller
         return redirect()->route('admin.index');
     }
 
-    public function editLinkAction(Request $request, string $slug, string $linkId){
+    public function editLinkAction(Request $request, string $slug, string $linkId)
+    {
         $user = Auth::user();
 
         $page = Page::where('id_user', $user->public_id)->where('slug', $slug)
             ->first();
 
-        if($page){
+        if ($page) {
             $link = Link::where('public_id', $linkId)
                 ->where('id_page', $page->public_id)->first();
 
-            if($link) {
+            if ($link) {
                 $data = $request->only([
                     'status',
                     'title',
@@ -309,7 +409,7 @@ class AdminController extends Controller
                     'op_border_type' => ['required', Rule::in(['square', 'rounded'])],
                 ]);
 
-                if($validator->fails()){
+                if ($validator->fails()) {
                     $request->session()->flash('errors', $validator->errors()->all());
 
                     return redirect()->route('admin.editlink', [
@@ -342,24 +442,24 @@ class AdminController extends Controller
         return redirect()->route('admin.index');
     }
 
-    public function dellink (string $slug, string $linkId)
+    public function dellink(string $slug, string $linkId)
     {
         $user = Auth::user();
 
         $page = Page::where('id_user', $user->public_id)->where('slug', $slug)
             ->first();
 
-        if($page){
+        if ($page) {
             $link = Link::where('public_id', $linkId)
                 ->where('id_page', $page->public_id)->first();
 
-            if($link) {
+            if ($link) {
                 $link->delete();
 
                 $allLinks = Link::where('id_page', $page->public_id)
                     ->orderBy('order', 'ASC')->get();
 
-                foreach($allLinks as $key => $item){
+                foreach ($allLinks as $key => $item) {
                     $item->order = $key;
                     $item->save();
                 };
@@ -371,17 +471,57 @@ class AdminController extends Controller
         return redirect()->route('admin.index');
     }
 
-    public function pageDesign (string $slug)
+    public function pageDesign(string $slug)
     {
-        return view('admin.page_design', [
-            'menu' => 'design'
-        ]);
+        $user = Auth::user();
+
+        $page = Page::where('id_user', $user->public_id)->where('slug', $slug)
+            ->first();
+
+        if ($page) {
+            return view('admin.page_design', [
+                'menu' => 'design',
+                'page' => $page
+            ]);
+        } else {
+            return redirect()->route('admin.index');
+        }
     }
 
-    public function pageStats (string $slug)
+    public function pageStats(string $slug)
     {
-        return view('admin.page_stats', [
-            'menu' => 'stats'
-        ]);
+        $user = Auth::user();
+
+        $page = Page::where('id_user', $user->public_id)->where('slug', $slug)
+            ->first();
+
+        if ($page) {
+            return view('admin.page_stats', [
+                'menu' => 'stats',
+                'page' => $page
+            ]);
+        } else {
+            return redirect()->route('admin.index');
+        }
+    }
+
+    public function pageDelete(string $slug)
+    {
+        $user = Auth::user();
+
+        $page = Page::where('id_user', $user->public_id)->where('slug', $slug)
+            ->first();
+
+        if ($page) {
+            if($page->op_profile_image !== 'default.webp'){
+                unlink(public_path('/media/uploads/' . $page->op_profile_image));
+            };
+
+            $page->delete();
+
+            return redirect()->route('admin.index');
+        } else {
+            return redirect()->route('admin.index');
+        }
     }
 }
