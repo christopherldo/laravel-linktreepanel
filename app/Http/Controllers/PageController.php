@@ -17,7 +17,7 @@ class PageController extends Controller
             'slug' => 'exists:pages'
         ]);
 
-        if($validator->fails()){
+        if ($validator->fails()) {
             return view('notfound');
         } else {
             $page = Page::where('slug', $slug)->first();
@@ -32,11 +32,12 @@ class PageController extends Controller
             $bgValue = $page->op_bg_value;
 
             $principalColor = '#ffffff';
+            $secondColor = '#ffffff';
 
-            switch($bgType){
+            switch ($bgType) {
                 case 'image':
                     $bgValue = "url('" . url('/media/uploads/' . $bgValue) . "')";
-                break;
+                    break;
                 case 'gradient':
                     $colors = explode(',', $bgValue);
 
@@ -45,7 +46,8 @@ class PageController extends Controller
 
                     $bgValue = "linear-gradient(90deg, $color1, $color2)";
                     $principalColor = $color1;
-                break;
+                    $secondColor = $color2;
+                    break;
             }
 
             $links = Link::where('id_page', $pageId)->where('status', 1)
@@ -54,7 +56,7 @@ class PageController extends Controller
             $view = View::where('id_page', $pageId)
                 ->where('view_date', gmdate('Y-m-d'))->first();
 
-            if($view){
+            if ($view) {
                 $view->total++;
                 $view->save();
             } else {
@@ -62,7 +64,7 @@ class PageController extends Controller
 
                 do {
                     $viewPublicId = Str::uuid()->toString();
-                } while(View::where('public_id', $viewPublicId)->count() > 0);
+                } while (View::where('public_id', $viewPublicId)->count() > 0);
 
                 $view->public_id = $viewPublicId;
                 $view->id_page = $pageId;
@@ -79,6 +81,7 @@ class PageController extends Controller
                 'description' => $description,
                 'fb_pixel' => $fbPixel,
                 'principal_color' => $principalColor,
+                'second_color' => $secondColor,
                 'bg' => $bgValue,
                 'links' => $links
             ]);

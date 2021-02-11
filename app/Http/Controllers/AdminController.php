@@ -288,7 +288,7 @@ class AdminController extends Controller
 
         if ($page) {
             return view('admin.page_editlink', [
-                'menu' => 'links',
+                'menu' => 'newLink',
                 'page' => $page
             ]);
         } else {
@@ -372,7 +372,7 @@ class AdminController extends Controller
 
             if ($link) {
                 return view('admin.page_editlink', [
-                    'menu' => 'links',
+                    'menu' => 'editLink',
                     'page' => $page,
                     'link' => $link,
                 ]);

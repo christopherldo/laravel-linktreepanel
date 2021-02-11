@@ -3,30 +3,34 @@
 @section('title', $page->op_title . ' | Links - LinkBree')
 
 @section('content')
-    <div class="preheader">
-        {{$page->op_title}}
-    </div>
-
-    <div class="area">
-        <div class="leftside">
-            <header>
-                <ul>
-                    <li @if($menu === 'links') class="active" @endif>
-                        <a href="{{ url('admin/'. $page->slug .'/links') }}">Links</a>
-                    </li>
-                    <li @if($menu === 'design') class="active" @endif>
-                        <a href="{{ url('admin/'. $page->slug .'/design') }}">Aparência</a>
-                    </li>
-                    <li @if($menu === 'stats') class="active" @endif>
-                        <a href="{{ url('admin/'. $page->slug .'/stats') }}">Estatísticas</a>
-                    </li>
-                </ul>
-            </header>
-
-            @yield('body')
+    <div class="card mb-4">
+        <div class="card-header">
+            {{ $page->op_title }}
         </div>
-        <div class="rightside">
-            <iframe src="{{ url($page->slug) }}" frameborder="0"></iframe>
+        <div class="card-body">
+            <div class="row row-cols-lg-6 m-2 d-flex flex-wrap justify-content-center justify-content-lg-start">
+                <a class="btn m-1 {{ $menu === 'links' || $menu === 'newLink' || $menu === 'editLink' ? 'btn-primary' : 'btn-dark' }}"
+                    href="{{ url('admin/' . $page->slug . '/links') }}">Links</a>
+                <a class="btn m-1 {{ $menu === 'design' ? 'btn-primary' : 'btn-dark' }}"
+                    href="{{ url('admin/' . $page->slug . '/design') }}">Aparência</a>
+                <a class="btn m-1 {{ $menu === 'stats' ? 'btn-primary' : 'btn-dark' }}"
+                    href="{{ url('admin/' . $page->slug . '/stats') }}">Estatísticas</a>
+                @if ($menu !== 'newLink')
+                    <a class="btn m-1 {{ $menu === 'newLink' ? 'btn-primary' : 'btn-warning' }}"
+                        href="{{ route('admin.newlink', $page->slug) }}">
+                        Novo Link
+                    </a>
+                @endif
+            </div>
+            <div class="d-flex flex-wrap justify-content-center">
+                <div class="flex-fill">
+                    @yield('body')
+                </div>
+                @if ($menu === 'links')
+                    <iframe class="my-4 rounded-3" style="width: 400px; min-height: 700px;"
+                        src="{{ url($page->slug) }}" frameborder="0"></iframe>
+                @endif
+            </div>
         </div>
     </div>
 @endsection
