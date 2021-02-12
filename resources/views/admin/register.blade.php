@@ -11,7 +11,7 @@
 </head>
 
 <body class="d-flex vh-100 justify-content-center align-items-center bg-dark">
-    <div class="form-signin p-5 card">
+    <div class="form-signin p-5 mx-2 card">
         <h1 class="mb-3">Registro</h1>
 
         @if ($errors)

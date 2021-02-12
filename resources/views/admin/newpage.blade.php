@@ -3,7 +3,7 @@
 @section('title', 'Nova Página - LinkBree')
 
 @section('content')
-    <div class="card">
+    <div class="card mb-4">
         <div class="card-header">
             <h2>Nova Página</h2>
         </div>

@@ -149,7 +149,7 @@
 
     <div class="linkArea">
         @foreach ($links as $link)
-            <a rel="noreferrer" href="{{ $link->href }}" class="link-{{ $link->op_border_type }}"
+            <a rel="noreferrer" href="{{ route('link', $link->public_id) }}" class="link-{{ $link->op_border_type }}"
                 style="background-color: {{ $link->op_bg_color }}; color: {{ $link->op_text_color }}"
                 target="_blank">
                 {{ $link->title }}
@@ -158,7 +158,7 @@
     </div>
 
     <div class="banner">
-        Feito com ❤️ por <a href="{{ route('page', 'christopherldo') }}">christopherldo</a>
+        Feito com ❤️ por <a href="{{ route('page', 'christopher') }}">christopherldo</a>
     </div>
 </body>
 

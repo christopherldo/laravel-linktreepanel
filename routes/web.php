@@ -40,4 +40,6 @@ Route::prefix('admin')->group(function (){
     Route::get('{slug}/dellink/{linkid}', [AdminController::class, 'dellink'])->name('admin.dellink');
 });
 
+Route::get('link/{linkId}', [PageController::class, 'linkAction'])->name('link');
+
 Route::get('{slug}', [PageController::class, 'index'])->name('page');

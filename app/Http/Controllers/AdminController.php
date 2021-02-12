@@ -7,6 +7,7 @@ use App\Models\Link;
 use App\Models\Page;
 use App\Models\User;
 use App\Models\View;
+use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -456,6 +457,8 @@ class AdminController extends Controller
             $link = Link::where('public_id', $linkId)
                 ->where('id_page', $page->public_id)->first();
 
+            Click::where('id_link', $link->public_id)->delete();
+
             if ($link) {
                 $link->delete();
 
@@ -583,7 +586,7 @@ class AdminController extends Controller
 
                 $page->save();
 
-                return redirect()->route('admin.design', $pageSlug);
+                return redirect()->route('admin.links', $pageSlug);
             };
         };
 
@@ -598,9 +601,84 @@ class AdminController extends Controller
             ->first();
 
         if ($page) {
+            $views = View::select([
+                'view_date',
+                'total',
+            ])->where('id_page', $page->public_id)
+                ->where('view_date', '>=', gmdate('Y-m-d', strtotime('-1 week')))
+                ->orderBy('view_date')->get();
+
+            $viewsData = [];
+            $viewsLabel = [];
+
+            $weekdays = [
+                'Dom',
+                'Seg',
+                'Ter',
+                'Qua',
+                'Qui',
+                'Sex',
+                'Sáb',
+            ];
+
+            foreach($views as $view){
+                array_push($viewsData, $view->total);
+
+                $date = gmdate('d w', strtotime($view->view_date));
+                $date = explode(' ', $date);
+
+                $date[1] = $weekdays[$date[1]];
+
+                $date = implode(' ', $date);
+
+                array_push($viewsLabel, $date);
+            };
+
+            $viewsData = implode(', ', $viewsData);
+            $viewsLabel = implode('", "', $viewsLabel);
+
+            $viewsLabel = '"' . $viewsLabel;
+            $viewsLabel .= '"';
+
+            $links = Link::select([
+                'public_id',
+                'title'
+            ])->where('id_page', $page->public_id)->orderBy('order', 'ASC')->get();
+
+            $dateLastDay = gmdate('Y-m-d', strtotime('-1 day'));
+            $dateLastWeek = gmdate('Y-m-d', strtotime('-1 week'));
+            $dateLastMonth = gmdate('Y-m-d', strtotime('-1 month'));
+            $dateLastYear = gmdate('Y-m-d', strtotime('-1 year'));
+
+            foreach ($links as $linkKey => $link) {
+                $links[$linkKey]->last_day = array_sum(
+                    Click::where('id_link', $link->public_id)
+                        ->where('click_date', '>=', $dateLastDay)->pluck('total')
+                        ->toArray()
+                );
+                $links[$linkKey]->last_week = array_sum(
+                    Click::where('id_link', $link->public_id)
+                        ->where('click_date', '>=', $dateLastWeek)->pluck('total')
+                        ->toArray()
+                );
+                $links[$linkKey]->last_month = array_sum(
+                    Click::where('id_link', $link->public_id)
+                        ->where('click_date', '>=', $dateLastMonth)->pluck('total')
+                        ->toArray()
+                );
+                $links[$linkKey]->last_year = array_sum(
+                    Click::where('id_link', $link->public_id)
+                        ->where('click_date', '>=', $dateLastYear)->pluck('total')
+                        ->toArray()
+                );
+            };
+
             return view('admin.page_stats', [
                 'menu' => 'stats',
-                'page' => $page
+                'page' => $page,
+                'links' => $links,
+                'viewsLabel' => $viewsLabel,
+                'viewsData' => $viewsData,
             ]);
         } else {
             return redirect()->route('admin.index');
@@ -618,20 +696,13 @@ class AdminController extends Controller
             $links = Link::where('id_page', $page->public_id)->get();
 
             foreach ($links as $link) {
-                $clicks = Click::where('id_link', $link->public_id)->get();
-
-                foreach ($clicks as $click) {
-                    $click->delete();
-                };
+                Click::where('id_link', $link->public_id)->delete();
 
                 $link->delete();
             };
 
-            $views = View::where('id_page', $page->public_id)->get();
 
-            foreach ($views as $view) {
-                $view->delete();
-            };
+            View::where('id_page', $page->public_id)->delete();
 
             if ($page->op_profile_image !== 'default.webp') {
                 unlink(public_path('/media/uploads/' . $page->op_profile_image));

@@ -58,7 +58,7 @@ class CreateAllTables extends Migration
         Schema::create('clicks', function(Blueprint $table) {
             $table->id();
             $table->uuid('public_id')->unique();
-            $table->integer('id_link');
+            $table->uuid('id_link');
             $table->date('click_date');
             $table->integer('total')->default(0);
         });

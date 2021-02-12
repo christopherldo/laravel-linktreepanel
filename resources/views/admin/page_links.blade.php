@@ -1,6 +1,15 @@
 @extends('admin.page')
 
 @section('body')
+    @if(count($links) === 0)
+        <div class="d-flex flex-column m-4">
+            Parece que você não tem um link ainda...<br>
+            Vamos criar um.
+
+            <a class="mt-3" href="{{route('admin.newlink', $page->slug)}}">É só clicar aqui.</a>
+        </div>
+    @endif
+
     <ul id="links" class="list-unstyled mt-4 px-3">
         @foreach ($links as $link)
             <li class="card w-100 my-2" data-id="{{ $link->public_id }}">

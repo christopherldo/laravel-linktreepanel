@@ -17,6 +17,13 @@
         </div>
 
         <div class="card-body d-flex flex-wrap">
+            @if(count($pages) === 0)
+                <div class="d-flex flex-column justify-content-center">
+                    Minha nossa... parece que você ainda não tem nenhuma página.<br>
+                    Crie a sua primeira!!<br>
+                    <a class="mt-3" href="{{route('admin.newpage')}}">É só clicar aqui.</a>
+                </div>
+            @endif
             @foreach ($pages as $page)
                 <div class="card flex-fill m-3">
                     <div class="card-header">

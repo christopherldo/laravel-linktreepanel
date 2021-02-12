@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Page;
 use App\Models\Link;
 use App\Models\View;
+use App\Models\Click;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -85,6 +86,41 @@ class PageController extends Controller
                 'bg' => $bgValue,
                 'links' => $links
             ]);
-        }
+        };
+    }
+
+    public function linkAction (string $linkId)
+    {
+        $validator = Validator::make(['public_id' => $linkId], [
+            'public_id' => 'exists:links'
+        ]);
+
+        if ($validator->fails()) {
+            return view('notfound');
+        } else {
+            $link = Link::where('public_id', $linkId)->first();
+
+            $click = Click::where('id_link', $linkId)
+                ->where('click_date', gmdate('Y-m-d'))->first();
+
+            if ($click) {
+                $click->total++;
+                $click->save();
+            } else {
+                $click = new Click();
+
+                do {
+                    $clickPublicId = Str::uuid()->toString();
+                } while (Click::where('public_id', $clickPublicId)->count() > 0);
+
+                $click->public_id = $clickPublicId;
+                $click->id_link = $linkId;
+                $click->click_date = gmdate('Y-m-d');
+                $click->total++;
+                $click->save();
+            }
+
+            return redirect()->away($link->href);
+        };
     }
 }
