@@ -151,7 +151,7 @@ class AdminController extends Controller
 
             $validator = Validator::make($data, [
                 'slug' => [
-                    'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
+                    'regex:/^[a-z0-9-]+$/img',
                     'required',
                     'string',
                     'unique:pages',
@@ -175,7 +175,7 @@ class AdminController extends Controller
                 $op_profile_image = $data['op_profile_image'] ?? '';
                 $op_title = $data['op_title'] ?? '';
                 $op_description = $data['op_description'] ?? '';
-                $slug = $data['slug'];
+                $slug = strtolower($data['slug']);
                 $op_font_color = $data['op_font_color'];
                 $op_bg_value_1 = $data['op_bg_value_1'];
                 $op_bg_value_2 = $data['op_bg_value_2'];
