@@ -149,11 +149,9 @@ class AdminController extends Controller
                 'op_description',
             ]);
 
-            $data['slug'] = strtolower($data['slug']);
-
             $validator = Validator::make($data, [
                 'slug' => [
-                    'regex:/^[a-z0-9-]+$/img',
+                    'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
                     'required',
                     'string',
                     'unique:pages',
