@@ -621,7 +621,7 @@ class AdminController extends Controller
                 'Sáb',
             ];
 
-            foreach($views as $view){
+            foreach ($views as $view) {
                 array_push($viewsData, $view->total);
 
                 $date = gmdate('d w', strtotime($view->view_date));
@@ -714,5 +714,72 @@ class AdminController extends Controller
         } else {
             return redirect()->route('admin.index');
         }
+    }
+
+    public function accountConfig()
+    {
+        $user = Auth::user();
+
+        return view('admin.account', [
+            'user' => $user,
+        ]);
+    }
+
+    public function accountConfigAction(Request $request)
+    {
+        $user = Auth::user();
+
+        $data = $request->only([
+            'email',
+            'password',
+            'password_confirmation'
+        ]);
+
+        if ($data['email'] === $user->email) {
+            unset($data['email']);
+        };
+
+        if (empty($data['password'])) {
+            unset($data['password']);
+        };
+
+        $validator = Validator::make($data, [
+            'email' => ['string', 'email', 'unique:users', 'max:50'],
+            'password' => ['string', 'min:8', 'confirmed']
+        ]);
+
+        if ($validator->fails()) {
+            $request->session()->flash('errors', $validator->errors()->all());
+
+            return redirect()->route('admin.account');
+        } else {
+            $email = $data['email'] ?? '';
+            $password = $data['password'] ?? '';
+
+            $changed = false;
+
+            if ($email || $password) {
+                $changed = true;
+            };
+
+            if ($changed) {
+                $modifiedUser = User::where('public_id', $user->public_id)->first();
+
+                if ($email) {
+                    $modifiedUser->email = $email;
+                };
+
+                if ($password) {
+                    $hash = password_hash($password, PASSWORD_DEFAULT);
+                    $modifiedUser->password = $hash;
+                };
+
+                $modifiedUser->save();
+
+                $request->session()->flash('success', 'Alterações salvas com sucesso!');
+            }
+
+            return redirect()->route('admin.account');
+        };
     }
 }

@@ -1,5 +1,7 @@
 @extends('admin.page')
 
+@section('title', $page->op_title . ' | Design - LinkBree')
+
 @section('body')
 
     @if (count($errors) > 0)

@@ -18,6 +18,9 @@ Route::prefix('admin')->group(function (){
 
     Route::get('logout', [AdminController::class, 'logout'])->name('logout');
 
+    Route::get('account', [AdminController::class, 'accountConfig'])->name('admin.account');
+    Route::post('account', [AdminController::class, 'accountConfigAction']);
+
     Route::get('{slug}/links', [AdminController::class, 'pageLinks'])->name('admin.links');
 
     Route::get('{slug}/design', [AdminController::class, 'pageDesign'])->name('admin.design');

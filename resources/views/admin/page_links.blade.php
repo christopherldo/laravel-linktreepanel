@@ -1,5 +1,7 @@
 @extends('admin.page')
 
+@section('title', $page->op_title . ' | Links - LinkBree')
+
 @section('body')
     @if(count($links) === 0)
         <div class="d-flex flex-column m-4">

@@ -13,7 +13,10 @@
 
 <body class="bg-light">
     <div class="container-fluid d-flex bg-dark p-3 mb-4 justify-content-between">
-        <a class="btn btn-light text-dark px-4 d-block mx-1" href="{{ route('admin.index') }}">Páginas</a>
+        <div class="d-flex">
+            <a class="btn btn-light text-dark px-4 d-block mx-1" href="{{ route('admin.index') }}">Páginas</a>
+            <a href="{{route('admin.account')}}" class="btn btn-info px-4 d-block mx-1">Conta</a>
+        </div>
         <a class="btn btn-danger" href="{{ route('logout') }}">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                 class="bi bi-box-arrow-right" viewBox="0 0 16 16">

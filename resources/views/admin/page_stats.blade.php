@@ -1,5 +1,7 @@
 @extends('admin.page')
 
+@section('title', $page->op_title . ' | Estatísticas - LinkBree')
+
 @section('body')
 
     <div class="mb-5 container d-flex flex-column align-items-center">

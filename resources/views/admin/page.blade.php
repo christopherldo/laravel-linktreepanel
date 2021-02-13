@@ -1,7 +1,5 @@
 @extends('admin.template')
 
-@section('title', $page->op_title . ' | Links - LinkBree')
-
 @section('content')
     <div class="card mb-4">
         <div class="card-header">

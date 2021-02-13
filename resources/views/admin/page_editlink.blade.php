@@ -1,5 +1,7 @@
 @extends('admin.page')
 
+@section('title', $page->op_title . ' | ' . (isset($link) ? 'Editar Link' : 'Novo Link') . ' - LinkBree')
+
 @section('body')
     <h2 class="my-2">{{ isset($link) ? 'Editar Link' : 'Novo Link' }}</h2>
 
