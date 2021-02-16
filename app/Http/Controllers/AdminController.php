@@ -157,7 +157,10 @@ class AdminController extends Controller
                     'unique:pages',
                     'min:2',
                     'max:16',
-                    Rule::notIn(['admin'])
+                    Rule::notIn([
+                        'admin',
+                        'link'
+                    ])
                 ],
                 'op_font_color' => ['required', 'regex:/^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/i'],
                 'op_bg_value_1' => ['required', 'regex:/^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/i'],
